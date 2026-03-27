@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>HÀNH TRÌNH TÌM LẠI KÝ ỨC: VÂN</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Arial', sans-serif; }
+        .hidden { display: none !important; }
+
+        /* LOGIN SCREEN XỊN SÒ */
+        #login-screen { 
+            position: fixed; inset: 0; 
+            background: radial-gradient(circle at center, #1e3799 0%, #000 100%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5000; 
+        }
+        .login-card {
+            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px);
+            padding: 40px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.2);
+            text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        }
+        h1 { color: #fff; text-shadow: 0 0 10px #fff; margin-bottom: 5px; }
+        .sub { color: #ff9f43; font-style: italic; margin-bottom: 25px; }
+        input { padding: 12px; width: 250px; border-radius: 20px; border: none; text-align: center; margin-bottom: 20px; outline: none; }
+        #start-btn { padding: 12px 40px; border-radius: 20px; border: none; background: #ee5253; color: #fff; font-weight: bold; cursor: pointer; }
+
+        /* GAME UI */
+        #game-ui { position: fixed; inset: 0; pointer-events: none; z-index: 100; }
+        #hud { position: absolute; top: 20px; width: 100%; display: flex; justify-content: space-around; color: gold; font-weight: bold; font-size: 18px; text-shadow: 1px 1px #000; }
+        #msg-box {
+            position: absolute; top: 20%; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9); color: #d63031; padding: 20px; border-radius: 15px;
+            width: 80%; max-width: 500px; text-align: center; font-weight: bold; border: 3px solid #ee5253;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5); z-index: 200;
+        }
+        #mobile-controls { position: absolute; bottom: 30px; right: 30px; display: flex; gap: 15px; pointer-events: auto; }
+        .ctrl-btn { width: 80px; height: 80px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid #fff; color: #fff; font-weight: bold; }
+
+        /* DEATH SCREEN */
+        #death-screen { position: fixed; inset: 0; background: rgba(139, 0, 0, 0.8); z-index: 8000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
+        .retry-btn { padding: 10px 30px; border-radius: 10px; border: none; background: #fff; color: #000; font-weight: bold; cursor: pointer; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="login-card">
+            <h1>HÀNH TRÌNH TÌM LẠI KÝ ỨC</h1>
+            <div class="sub">Dành riêng cho Vân yêu dấu</div>
+            <input type="password" id="password" placeholder="Mật khẩu của chúng mình...">
+            <button id="start-btn" onclick="checkLogin()">KHỞI ĐẦU</button>
+        </div>
+    </div>
+
+    <div id="game-ui" class="hidden">
+        <div id="hud">
+            <div>Mảnh Chìa Khóa: <span id="frags">0</span>/10</div>
+            <div id="boost-status">BOOST: READY</div>
+        </div>
+        <div id="msg-box" class="hidden"></div>
+        <div id="mobile-controls">
+            <button class="ctrl-btn" onclick="startSwing()">MÓC DÂY</button>
+            <button class="ctrl-btn" onclick="boost()">BỨC TỐC</button>
+        </div>
+    </div>
+
+    <div id="death-screen" class="hidden">
+        <h2>ANH SẼ KHÔNG ĐỂ EM RA ĐI...</h2>
+        <button class="retry-btn" onclick="location.reload()">HỒI SINH (RESTART)</button>
+    </div>
+
+    <audio id="snd-forest" src="forest.mp3" loop></audio>
+    <audio id="snd-slash" src="slash.mp3"></audio>
+    <audio id="snd-blood" src="blood.mp3"></audio>
+
+    <script>
+        let scene, camera, renderer, titan, swordL, swordR, isSwinging = false;
+        let targetPos = new THREE.Vector3(), frags = 0, isGameOver = false, boostReady = true;
+
+        const cheers = [
+            "Ái chà, coi bộ biết chơi rồi đó vợ của tổng tài =).",
+            "Á ĐU bây bi vip vậy ngầu quá ta ơi trời ơi vip thiệt á chứ.",
+            "Trời má ngưỡng mộ quá bây bi ơi tui yêu em cố lên còn vài thằng nữa hà.",
+            "Đu vip vãi em iu ơi má em iu tui mãi đỉnh ông nội ơi rén một thằng chó nữa là đi được một nữa trận đường rồi de de.",
+            "Vợ đúng là vợ tui tuyệt vời quá đi hà vậy là còn 5 thằng nữa cố lên nha vợ iu.",
+            "Má ơi vợ vip thật mãi đỉnh bây bi mãi đỉnh.",
+            "ĐU ĐU ĐU ÔNG CỐ NỘI ƠI BÀ NỘI ƠI CHÁU DÂU TUYỆT QUÁ KÌA!.",
+            "RỒI RỒI vợi tui vip dữ lắm rồi sắp rôi vợ ơi.",
+            "YEAH được 90% rồi cố lên nha cố lên nha bé iu của anh anh tin em làm được thằng chó thứ mười trâu lắm kiên trì đánh nha.",
+            "Chúc mừng em đây là phần thưởng của em đây ạ ❤️"
+        ];
+
+        function checkLogin() {
+            if(document.getElementById('password').value === "emyeubminhlam") {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('game-ui').classList.remove('hidden');
+                initGame();
+            } else { alert("Sai mật khẩu rồi vợ ơi!"); }
+        }
+
+        function initGame() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87ceeb);
+            scene.fog = new THREE.Fog(0x87ceeb, 1, 100);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+            const sun = new THREE.DirectionalLight(0xffffff, 1);
+            sun.position.set(5, 10, 5);
+            scene.add(sun);
+
+            const ground = new THREE.Mesh(new THREE.PlaneGeometry(500, 500), new THREE.MeshStandardMaterial({color: 0x1a3c15}));
+            ground.rotation.x = -Math.PI/2;
+            scene.add(ground);
+
+            for(let i=0; i<80; i++) {
+                const tree = new THREE.Group();
+                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.5, 12), new THREE.MeshStandardMaterial({color: 0x3d2b1f}));
+                const leaves = new THREE.Mesh(new THREE.ConeGeometry(3, 8, 8), new THREE.MeshStandardMaterial({color: 0x0a4d1c}));
+                leaves.position.y = 7;
+                tree.add(trunk, leaves);
+                tree.position.set(Math.random()*160-80, 6, Math.random()*160-80);
+                scene.add(tree);
+            }
+
+            const sMat = new THREE.MeshStandardMaterial({color: 0xcccccc, metalness: 0.8});
+            swordL = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 1.5), sMat);
+            swordR = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 1.5), sMat);
+            camera.add(swordL, swordR);
+            swordL.position.set(-0.6, -0.4, -1);
+            swordR.position.set(0.6, -0.4, -1);
+            scene.add(camera);
+
+            document.getElementById('snd-forest').play();
+            camera.position.set(0, 3, 10);
+            spawnTitan();
+            animate();
+        }
+
+        function spawnTitan() {
+            if(titan) scene.remove(titan);
+            titan = new THREE.Group();
+            const skin = new THREE.MeshStandardMaterial({color: 0xffdbac});
+            const body = new THREE.Mesh(new THREE.CylinderGeometry(1, 0.8, 5), skin);
+            const head = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.3, 1.2), skin);
+            head.position.y = 3.2;
+            const heart = new THREE.Mesh(new THREE.SphereGeometry(0.4), new THREE.MeshBasicMaterial({color: 0xff0000}));
+            heart.position.set(0, 1.5, 0.6); heart.name = "TIM";
+            titan.add(body, head, heart);
+            titan.position.set(Math.random()*40-20, 2.5, camera.position.z - 35);
+            scene.add(titan);
+        }
+
+        function startSwing() {
+            if(isGameOver) return;
+            const dir = new THREE.Vector3();
+            camera.getWorldDirection(dir);
+            targetPos.copy(camera.position).addScaledVector(dir, 30);
+            isSwinging = true;
+        }
+
+        function boost() {
+            if(!boostReady || isGameOver) return;
+            camera.position.addScaledVector(camera.getWorldDirection(new THREE.Vector3()), 10);
+            boostReady = false;
+            document.getElementById('boost-status').innerText = "GAS RECHARGING...";
+            setTimeout(() => { boostReady = true; document.getElementById('boost-status').innerText = "BOOST: READY"; }, 4000);
+        }
+
+        function animate() {
+            if(isGameOver) return;
+            requestAnimationFrame(animate);
+            const dist = camera.position.distanceTo(titan.position);
+            if(dist < 25) { 
+                titan.lookAt(camera.position); 
+                titan.translateZ(0.12 + (frags * 0.03)); 
+            }
+            if(dist < 3) { 
+                isGameOver = true; 
+                document.getElementById('snd-blood').play(); 
+                document.getElementById('death-screen').classList.remove('hidden'); 
+            }
+            if(isSwinging) { 
+                camera.position.lerp(targetPos, 0.1); 
+                if(camera.position.distanceTo(targetPos) < 1.5) isSwinging = false; 
+            }
+            swordL.position.y = -0.4 + Math.sin(Date.now()*0.005)*0.01;
+            swordR.position.y = -0.4 + Math.sin(Date.now()*0.005)*0.01;
+            renderer.render(scene, camera);
+        }
+
+        window.onclick = () => {
+            if(isGameOver || !titan) return;
+            const ray = new THREE.Raycaster();
+            ray.setFromCamera(new THREE.Vector2(0,0), camera);
+            const hits = ray.intersectObjects(titan.children);
+            if(hits.length > 0 && hits[0].object.name === "TIM") {
+                document.getElementById('snd-slash').play();
+                document.getElementById('snd-blood').play();
+                killTitan();
+            }
+        };
+
+        function killTitan() {
+            const msg = document.getElementById('msg-box');
+            msg.innerText = cheers[frags];
+            msg.classList.remove('hidden');
+            
+            let s = 0;
+            const t = setInterval(() => {
+                titan.scale.multiplyScalar(0.8);
+                titan.position.y += 0.5;
+                if(++s > 12) {
+                    clearInterval(t);
+                    msg.classList.add('hidden');
+                    frags++;
+                    document.getElementById('frags').innerText = frags;
+                    if(frags < 10) spawnTitan();
+                    else alert("Vân ơi, em đã lấy được tất cả mảnh ký ức! Anh yêu em!");
+                }
+            }, 100);
+        }
+    </script>
+</body>
+</html>
