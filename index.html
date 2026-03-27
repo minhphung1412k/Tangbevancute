@@ -3,99 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>HÀNH TRÌNH TÌM LẠI KÝ ỨC: VÂN</title>
-    
+    <title>ETERNITY FOR VÂN ❤️</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
     <style>
-        /* ======================== STYLE (CSS) ======================== */
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Arial', sans-serif; }
+        canvas { display: block; }
         .hidden { display: none !important; }
 
-        /* MÀN HÌNH XOAY NGANG */
-        #rotate-device { position: fixed; inset: 0; background: #000; color: #fff; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        @media (orientation: landscape) { #rotate-device { display: none; } }
-
-        /* MÀN HÌNH LOGIN LÃNG MẠN */
+        /* GIAO DIỆN ĐĂNG NHẬP SANG TRỌNG */
         #login-screen { 
             position: fixed; inset: 0; 
-            background: radial-gradient(circle at center, #1e3799 0%, #000 100%);
-            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5000; 
+            background: linear-gradient(45deg, #0f0c29, #302b63, #24243e);
+            display: flex; align-items: center; justify-content: center; z-index: 9999;
         }
-        .login-card {
-            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px);
-            padding: 50px; border-radius: 40px; border: 1px solid rgba(255,255,255,0.2);
-            text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        .login-box {
+            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(25px);
+            padding: 60px; border-radius: 40px; border: 1px solid rgba(255,255,255,0.2);
+            text-align: center; box-shadow: 0 0 100px rgba(0,0,0,0.5);
+            max-width: 400px; width: 90%;
         }
-        h1 { color: #fff; font-size: 32px; letter-spacing: 2px; text-shadow: 0 0 15px #fff; }
-        .sub-text { color: #ff9f43; font-style: italic; margin-bottom: 30px; }
-        input { display: block; width: 280px; padding: 15px; margin: 20px auto; border-radius: 50px; border: none; background: rgba(255,255,255,0.9); font-size: 16px; text-align: center; outline: none; }
-        #start-btn { padding: 15px 50px; border-radius: 50px; border: none; background: #ee5253; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 18px; }
-        #start-btn:hover { transform: scale(1.1); background: #ff6b6b; box-shadow: 0 0 20px #ff6b6b; }
+        h1 { color: #fff; font-size: 24px; letter-spacing: 4px; margin-bottom: 10px; text-transform: uppercase; }
+        .sub { color: #ff9f43; font-size: 14px; margin-bottom: 40px; opacity: 0.8; }
+        input { 
+            width: 100%; padding: 15px; margin-bottom: 25px; border-radius: 30px; border: none;
+            background: rgba(255,255,255,0.9); text-align: center; font-size: 16px; box-sizing: border-box;
+        }
+        #start-btn { 
+            width: 100%; padding: 15px; border-radius: 30px; border: none;
+            background: #ff4757; color: white; font-weight: bold; cursor: pointer; transition: 0.3s;
+        }
+        #start-btn:hover { background: #ff6b81; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(255,71,87,0.4); }
 
-        /* GIAO DIỆN TRONG GAME */
-        #game-ui { position: fixed; inset: 0; pointer-events: none; z-index: 100; }
-        #crosshair { position: absolute; top: 50%; left: 50%; width: 25px; height: 25px; border: 2px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); opacity: 0.6; }
-        #hud { position: absolute; top: 20px; width: 100%; display: flex; justify-content: space-around; color: gold; font-weight: bold; font-size: 20px; text-shadow: 2px 2px #000; }
-        #msg-box {
-            position: absolute; top: 20%; left: 50%; transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.9); color: #000; padding: 25px; border-radius: 20px;
-            width: 80%; max-width: 600px; border: 4px solid #ee5253; font-weight: bold; font-size: 18px; text-align: center;
-            box-shadow: 0 0 30px rgba(0,0,0,0.5); z-index: 200; pointer-events: auto;
+        /* UI TRONG GAME - TINH TẾ HƠN */
+        #game-ui { position: fixed; inset: 0; pointer-events: none; z-index: 100; color: #fff; }
+        #hud { position: absolute; top: 30px; left: 30px; font-size: 14px; letter-spacing: 2px; }
+        #frags-count { font-size: 32px; font-weight: bold; color: #ff9f43; }
+        
+        /* THÔNG BÁO TỔNG TÀI - HIỆN GIỮA MÀN HÌNH */
+        #cheer-msg {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -150%);
+            font-size: 24px; font-weight: bold; text-align: center; color: #fff;
+            text-shadow: 0 0 20px #ff4757; width: 80%; transition: 0.5s; opacity: 0;
         }
 
-        /* NÚT BẤM HOẠT HỌA (ICON) */
-        #mobile-controls { position: absolute; bottom: 30px; right: 30px; display: flex; gap: 20px; pointer-events: auto; }
-        .game-btn { 
-            width: 80px; height: 80px; border-radius: 50%; background: rgba(255,255,255,0.1); 
-            border: 2px solid #fff; color: white; font-size: 35px; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: 0.2s;
+        /* NÚT MOBILE - CHỈ HIỆN TRÊN ĐIỆN THOẠI */
+        #mobile-controls { position: absolute; bottom: 40px; right: 40px; display: flex; gap: 20px; pointer-events: auto; }
+        .m-btn { 
+            width: 70px; height: 70px; border-radius: 50%; background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.5); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 24px;
         }
-        .game-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.3); }
-        .dimmed { opacity: 0.3; filter: grayscale(1); }
 
-        /* MÀN HÌNH CHẾT */
-        #death-screen { position: fixed; inset: 0; z-index: 8000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        #blood-bg { position: absolute; inset: 0; background: radial-gradient(circle, #ff0000 0%, #000 100%); opacity: 0.9; }
-        .death-content { z-index: 8001; text-align: center; color: white; }
-        .restart-btn { padding: 15px 30px; background: white; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 18px; }
-
+        /* HIỆU ỨNG CHẾT */
+        #death-screen { position: fixed; inset: 0; z-index: 10000; background: radial-gradient(circle, #4b0000 0%, #000 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; }
+        .restart { margin-top: 20px; padding: 12px 30px; border-radius: 20px; border: none; background: #fff; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div id="rotate-device">🔄<br>Xin mời vợ quay ngang để mukbang trò chơi</div>
-
     <div id="login-screen">
-        <div class="login-card">
-            <h1>HÀNH TRÌNH TÌM LẠI KÝ ỨC</h1>
-            <div class="sub-text">Dành riêng cho Vân yêu dấu</div>
+        <div class="login-box">
+            <h1>ETERNITY</h1>
+            <div class="sub">Hành trình tìm lại ký ức cho Vân</div>
             <input type="password" id="password" placeholder="Mật khẩu của chúng mình...">
             <button id="start-btn" onclick="checkLogin()">KHỞI ĐẦU</button>
         </div>
     </div>
 
     <div id="game-ui" class="hidden">
-        <div id="crosshair"></div>
         <div id="hud">
-            <div>Chìa Khóa: <span id="frags">0</span>/10</div>
-            <div id="boost-status">READY</div>
+            KÝ ỨC ĐÃ TÌM THẤY<br>
+            <span id="frags-count">00</span> / 10
         </div>
-        <div id="msg-box" class="hidden"></div>
+        <div id="cheer-msg">ĐANG KHỞI TẠO...</div>
         
         <div id="mobile-controls">
-            <button class="game-btn" onclick="startSwing()"><i class="fas fa-anchor"></i></button>
-            <button id="btn-boost" class="game-btn" onclick="boost()"><i class="fas fa-fire"></i></button>
+            <div class="m-btn" onmousedown="startSwing()" ontouchstart="startSwing()"><i class="fas fa-anchor"></i></div>
+            <div class="m-btn" onmousedown="boost()" ontouchstart="boost()"><i class="fas fa-bolt"></i></div>
         </div>
     </div>
 
     <div id="death-screen" class="hidden">
-        <div id="blood-bg"></div>
-        <div class="death-content">
-            <h2>ANH SẼ KHÔNG ĐỂ EM RA ĐI...</h2>
-            <button class="restart-btn" onclick="location.reload()">HỒI SINH (RESTART)</button>
-        </div>
+        <h2>ANH SẼ KHÔNG ĐỂ EM RA ĐI...</h2>
+        <button class="restart" onclick="location.reload()">HỒI SINH</button>
     </div>
 
     <audio id="snd-forest" src="forest.mp3" loop></audio>
@@ -103,23 +93,23 @@
     <audio id="snd-blood" src="blood.mp3"></audio>
 
     <script>
-        // ======================== SCRIPT (JS) ========================
-        let scene, camera, renderer, titan, hands, isSwinging = false;
+        // === BIẾN HỆ THỐNG ===
+        let scene, camera, renderer, titan, katanaGroup, isSwinging = false;
         let targetPos = new THREE.Vector3(), frags = 0, isGameOver = false, boostReady = true;
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        let noiseLevel = 0, totalTime = 0;
-        
+        let walkCycle = 0, mouseX = 0, mouseY = 0;
+        const keys = {};
+
         const cheers = [
-            "Ái chà, coi bộ biết chơi rồi đó vợ của tổng tài =).",
-            "Á ĐU bây bi vip vậy ngầu quá ta ơi trời ơi vip thiệt á chứ.",
-            "Trời má ngưỡng mộ quá bây bi ơi tui yêu em cố lên còn vài thằng nữa hà.",
-            "Đu vip vãi em iu ơi má em iu tui mãi đỉnh ông nội ơi rén một thằng chó nữa là đi được một nữa trận đường rồi de de.",
-            "Vợ đúng là vợ tui tuyệt vời quá đi hà vậy là còn 5 thằng nữa cố lên nha vợ iu.",
-            "Má ơi vợ vip thật mãi đỉnh bây bi mãi đỉnh.",
-            "ĐU ĐU ĐU ÔNG CỐ NỘI ƠI BÀ NỘI ƠI CHÁU DÂU TUYỆT QUÁ KÌA!.",
-            "RỒI RỒI vợi tui vip dữ lắm rồi sắp rôi vợ ơi.",
-            "YEAH được 90% rồi cố lên nha cố lên nha bé iu của anh anh tin em làm được.",
-            "Chúc mừng em đây là phần thưởng của em đây ạ ❤️"
+            "Biết chơi rồi đó vợ của tổng tài! =)",
+            "Á ĐU! Vip vậy ngầu quá vợ ơi!",
+            "Ngưỡng mộ quá đi, tui yêu em cố lên!",
+            "Sắp đi được nửa đường rồi, tuyệt vời!",
+            "Còn 5 thằng nữa thôi, cố lên nha vợ iu!",
+            "Mãi đỉnh baby ơi, mãi đỉnh!",
+            "ÔNG CỐ NỘI ƠI, CHÁU DÂU TUYỆT QUÁ!",
+            "Sắp tới đích rồi vợ ơi, cố lên!",
+            "90% rồi! Anh tin em làm được!",
+            "Chúc mừng em! Đây là phần thưởng cho em ❤️"
         ];
 
         function checkLogin() {
@@ -127,159 +117,180 @@
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('game-ui').classList.remove('hidden');
                 initGame();
-            } else { alert("Sai mật khẩu rồi vợ ơi! ❤️"); }
+            } else { alert("Mật khẩu chưa đúng rồi vợ ơi!"); }
         }
 
         function initGame() {
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x87ceeb); // Bầu trời Anime sáng sủa
-            scene.fog = new THREE.Fog(0x87ceeb, 1, 120);
+            scene.background = new THREE.Color(0x0a0a1a);
+            scene.fog = new THREE.FogExp2(0x0a0a1a, 0.02);
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
             document.body.appendChild(renderer.domElement);
 
-            scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-            const sun = new THREE.DirectionalLight(0xffffff, 1.2); sun.position.set(10, 20, 10); scene.add(sun);
+            // Ánh sáng lãng mạn
+            const ambient = new THREE.AmbientLight(0x404040, 0.5); scene.add(ambient);
+            const moonLight = new THREE.DirectionalLight(0x80a0ff, 1);
+            moonLight.position.set(50, 100, 50);
+            moonLight.castShadow = true;
+            scene.add(moonLight);
 
-            const ground = new THREE.Mesh(new THREE.PlaneGeometry(500, 500), new THREE.MeshStandardMaterial({color: 0x1a3c15})); ground.rotation.x = -Math.PI/2; scene.add(ground);
+            // Mặt đất có lưới (Grid) nhìn rất hiện đại
+            const groundGeo = new THREE.PlaneGeometry(1000, 1000);
+            const groundMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI/2;
+            ground.receiveShadow = true;
+            scene.add(ground);
 
-            for(let i=0; i<120; i++) {
-                const tree = new THREE.Group();
-                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.6, 15), new THREE.MeshStandardMaterial({color: 0x3d2b1f}));
-                const leaves = new THREE.Mesh(new THREE.ConeGeometry(4, 10, 8), new THREE.MeshStandardMaterial({color: 0x0a4d1c}));
-                leaves.position.y = 8;
-                tree.add(trunk, leaves);
-                tree.position.set(Math.random()*200-100, 7.5, Math.random()*200-100);
-                scene.add(tree);
-            }
+            const grid = new THREE.GridHelper(1000, 100, 0xff4757, 0x222222);
+            grid.position.y = 0.01;
+            scene.add(grid);
 
-            // TẠO ĐÔI TAY ANIME MỀM MẠI (Không còn là khúc gỗ)
-            createAnimeHands();
-            
-            camera.position.set(0, 3, 10);
-            document.getElementById('snd-forest').volume = 0.3; document.getElementById('snd-forest').play();
+            // Tạo Kiếm Katana Anime
+            createKatana();
+
+            // Nhạc nền
+            document.getElementById('snd-forest').volume = 0.2;
+            document.getElementById('snd-forest').play();
+
+            window.addEventListener('keydown', e => keys[e.code] = true);
+            window.addEventListener('keyup', e => keys[e.code] = false);
+            window.addEventListener('mousemove', e => {
+                if(!isGameOver) {
+                    mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+                    mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+                }
+            });
+
             spawnTitan();
+            camera.position.set(0, 3, 10);
             animate();
         }
 
-        function createAnimeHands() {
-            hands = new THREE.Group();
-            const skinMat = new THREE.MeshStandardMaterial({color: 0xffdbac, roughness: 0.3}); // Da mềm
-            const metalMat = new THREE.MeshStandardMaterial({color: 0xcccccc, metalness: 0.9, roughness: 0.1}); // Kiếm sắc
+        function createKatana() {
+            katanaGroup = new THREE.Group();
+            const bladeMat = new THREE.MeshStandardMaterial({color: 0xffffff, metalness: 1, roughness: 0.1});
+            const handleMat = new THREE.MeshStandardMaterial({color: 0xff0000});
 
-            // Cánh tay có khớp (Articulated Arms)
-            function createArm(isLeft) {
-                const armGroup = new THREE.Group();
-                
-                // Cẳng tay
-                const forearm = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.08, 1, 16), skinMat);
-                forearm.position.y = -0.5;
-                armGroup.add(forearm);
-
-                // Bàn tay & Kiếm
-                const handSword = new THREE.Group();
-                const sword = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 1.8), metalMat);
-                sword.position.z = -0.8;
-                handSword.add(sword);
-                handSword.position.y = -1;
-                armGroup.add(handSword);
-
-                armGroup.position.set(isLeft ? -0.8 : 0.8, -0.2, -1.2);
-                armGroup.rotation.x = -Math.PI/6; // Góc cầm kiếm Anime
-                return armGroup;
+            function makeSword(side) {
+                const s = new THREE.Group();
+                const blade = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.08, 1.8), bladeMat);
+                const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.5), handleMat);
+                handle.rotation.x = Math.PI/2;
+                handle.position.z = 1;
+                s.add(blade, handle);
+                s.position.set(side * 0.8, -0.6, -1.2);
+                s.rotation.y = -side * 0.1;
+                return s;
             }
 
-            hands.add(createArm(true), createArm(false));
-            camera.add(hands);
+            katanaGroup.add(makeSword(-1), makeSword(1));
+            camera.add(katanaGroup);
             scene.add(camera);
         }
 
         function spawnTitan() {
             if(titan) scene.remove(titan);
             titan = new THREE.Group();
-            const skin = new THREE.MeshStandardMaterial({color: 0xedc9af, roughness: 1});
-            const belly = new THREE.Mesh(new THREE.SphereGeometry(1.5), skin); belly.scale.set(1, 1.5, 0.8);
-            const head = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.3, 1.2), skin); head.position.y = 3;
-            const heart = new THREE.Mesh(new THREE.SphereGeometry(0.4), new THREE.MeshBasicMaterial({color: 0xff0000})); heart.position.set(0, 1.2, 0.6); heart.name = "TIM";
-            titan.add(belly, head, heart);
-            titan.position.set(Math.random()*40-20, 2.5, camera.position.z - 35);
+            const skin = new THREE.MeshStandardMaterial({color: 0x3d3d3d});
+            const body = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1, 6), skin);
+            const head = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 1.5), skin);
+            head.position.y = 3.5;
+            const heart = new THREE.Mesh(new THREE.SphereGeometry(0.5), new THREE.MeshBasicMaterial({color: 0xff4757}));
+            heart.position.set(0, 1.5, 0.8); heart.name = "TIM";
+            titan.add(body, head, heart);
+            titan.position.set(Math.random()*40-20, 3, camera.position.z - 40);
             scene.add(titan);
-        }
-
-        function playActionSound(freq, dur) {
-            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            osc.connect(gain); gain.connect(audioCtx.destination); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + dur); osc.start(); osc.stop(audioCtx.currentTime + dur);
         }
 
         function startSwing() {
             if(isGameOver) return;
-            playActionSound(800, 0.2); // Tiếng "Xoẹt" nhân tạo
-            const dir = new THREE.Vector3(); camera.getWorldDirection(dir);
-            targetPos.copy(camera.position).addScaledVector(dir, 35);
             isSwinging = true;
+            const dir = new THREE.Vector3();
+            camera.getWorldDirection(dir);
+            targetPos.copy(camera.position).addScaledVector(dir, 30);
         }
 
         function boost() {
             if(!boostReady || isGameOver) return;
-            playActionSound(150, 0.5); // Tiếng Gas
-            camera.position.addScaledVector(camera.getWorldDirection(new THREE.Vector3()), 12);
+            camera.position.addScaledVector(camera.getWorldDirection(new THREE.Vector3()), 15);
             boostReady = false;
-            document.getElementById('boost-status').innerText = "RECHARGING...";
-            document.getElementById('btn-boost').classList.add('dimmed');
-            setTimeout(() => { boostReady = true; document.getElementById('boost-status').innerText = "READY"; document.getElementById('btn-boost').classList.remove('dimmed'); }, 5000);
+            setTimeout(() => boostReady = true, 3000);
         }
 
         function animate() {
             if(isGameOver) return;
             requestAnimationFrame(animate);
 
-            // CAMERA "THỞ" VÀ DI CHUYỂN MỀM MẠI
-            camera.position.y = 3 + Math.sin(Date.now()*0.003)*0.03; // Camera khẽ thở nhún nhảy
-            hands.position.y = -0.1 + Math.sin(Date.now()*0.005)*0.02; // Đôi tay Anime đung đưa nhẹ
+            // Điều khiển Camera bằng chuột
+            camera.rotation.y = -mouseX * 0.5;
+            camera.rotation.x = -mouseY * 0.3;
+
+            // Di chuyển WASD
+            const moveSpeed = 0.15;
+            if(keys['KeyW']) camera.translateZ(-moveSpeed);
+            if(keys['KeyS']) camera.translateZ(moveSpeed);
+            if(keys['KeyA']) camera.translateX(-moveSpeed);
+            if(keys['KeyD']) camera.translateX(moveSpeed);
+
+            // Hiệu ứng Camera "Thở" và "Đi bộ"
+            if(keys['KeyW'] || keys['KeyS'] || keys['KeyA'] || keys['KeyD']) {
+                walkCycle += 0.15;
+                camera.position.y = 3 + Math.sin(walkCycle) * 0.05;
+                katanaGroup.position.y = Math.sin(walkCycle * 2) * 0.02;
+            }
 
             const dist = camera.position.distanceTo(titan.position);
-            if(dist < 25) { titan.lookAt(camera.position); titan.translateZ(0.12 + (frags*0.04)); }
-            if(dist < 3) { isGameOver = true; document.getElementById('snd-blood').play(); document.getElementById('death-screen').classList.remove('hidden'); }
-            if(isSwinging) { camera.position.lerp(targetPos, 0.08); if(camera.position.distanceTo(targetPos) < 2) isSwinging = false; }
+            if(dist < 30) { titan.lookAt(camera.position); titan.translateZ(0.1 + frags * 0.02); }
+            if(dist < 4) gameOver();
+
+            if(isSwinging) {
+                camera.position.lerp(targetPos, 0.08);
+                if(camera.position.distanceTo(targetPos) < 2) isSwinging = false;
+            }
 
             renderer.render(scene, camera);
         }
 
         window.onclick = () => {
-            if(isGameOver || !titan) return;
+            if(isGameOver) return;
             const ray = new THREE.Raycaster();
             ray.setFromCamera(new THREE.Vector2(0,0), camera);
             const hits = ray.intersectObjects(titan.children);
             if(hits.length > 0 && hits[0].object.name === "TIM") {
-                document.getElementById('snd-slash').play(); document.getElementById('snd-blood').play();
+                document.getElementById('snd-slash').play();
                 killTitan();
             }
         };
 
         function killTitan() {
-            // Hiện thông báo Tổng tài chính xác
-            const msgBox = document.getElementById('msg-box');
-            msgBox.innerText = cheers[frags];
-            msgBox.classList.remove('hidden');
+            const msg = document.getElementById('cheer-msg');
+            msg.innerText = cheers[frags];
+            msg.style.opacity = 1;
             
-            // TITAN BỐC HƠI KINH TỞM (Đổ màu đỏ, bay lên)
-            let steam = 0;
-            titan.children[0].material.color.set(0xff0000); // Cơ thể Titan đỏ lịm
-            
+            let s = 0;
             const timer = setInterval(() => {
-                titan.scale.multiplyScalar(0.8); // Nhỏ dần
-                titan.position.y += 0.5; // Bay lên như khói
-                if(++steam > 12) {
+                titan.scale.multiplyScalar(0.85);
+                titan.position.y += 0.4;
+                if(++s > 15) {
                     clearInterval(timer);
-                    msgBox.classList.add('hidden');
+                    msg.style.opacity = 0;
                     frags++;
-                    document.getElementById('frags').innerText = frags;
+                    document.getElementById('frags-count').innerText = frags < 10 ? '0'+frags : frags;
                     if(frags < 10) spawnTitan();
-                    else alert("Vân ơi, mảnh chìa khóa cuối cùng của anh gửi em... Anh yêu em! ❤️");
+                    else alert("Vân ơi, em đã chiến thắng! Anh yêu em rất nhiều!");
                 }
-            }, 100);
+            }, 50);
+        }
+
+        function gameOver() {
+            isGameOver = true;
+            document.getElementById('snd-blood').play();
+            document.getElementById('death-screen').classList.remove('hidden');
         }
     </script>
 </body>
